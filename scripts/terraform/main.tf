@@ -8,19 +8,6 @@ provider "azurerm" {
   # tenant_id       = var.tenant_id
 }
 
-# Sets global variables for this Terraform project.
-variable "app_name" {
-  description = "The name of the application"
-}
-
-variable "location" {
-  default = "australiasoutheast"
-}
-
-variable "kubernetes_version" {
-  description = "The version of Kubernetes to use"
-}
-
 # Creates a resource group for our two services in Azure account.
 resource "azurerm_resource_group" "bmdkamgfinal" {
   name     = var.app_name
@@ -52,5 +39,5 @@ resource "azurerm_container_registry" "container_registry" {
   resource_group_name = azurerm_resource_group.bmdkamgfinal.name
   location            = var.location
   admin_enabled       = true
-  sku                 = "Basic"
+  sku                 = "Basic"
 }
