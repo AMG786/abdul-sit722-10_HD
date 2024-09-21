@@ -32,9 +32,13 @@ jobs:
         working-directory: scripts/terraform
 
       - name: Terraform Plan
-        run: terraform plan -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=1.22.0"
+        run: |
+          terraform plan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=1.22.0"
         working-directory: scripts/terraform
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=1.22.0"
+        run: |
+          terraform apply -auto-approve -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=1.22.0"
         working-directory: scripts/terraform
+
+        
