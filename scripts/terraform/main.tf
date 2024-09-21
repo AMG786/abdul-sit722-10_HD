@@ -14,7 +14,7 @@ resource "azurerm_resource_group" "bmdkamgfinal" {
   location = var.location
 }
 
-# Creates a managed Kubernetes cluster on Azure.
+# Creates a managed Kubernetes cluster on Azuree.
 resource "azurerm_kubernetes_cluster" "cluster" {
   name                = var.app_name
   location            = var.location
