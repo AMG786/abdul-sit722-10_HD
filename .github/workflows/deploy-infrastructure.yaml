@@ -1,0 +1,40 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - scripts/terraform/**
+
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.6
+
+      - name: Log in to Azure using Device Code
+        run: |
+          az login --use-device-code
+          az account set --subscription 0cd94adc-79e1-40a3-9dc0-5fc8b1990326
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: scripts/terraform
+
+      - name: Terraform Plan
+        run: terraform plan -var="app_name=example-app" -var="kubernetes_version=1.22.0" -var="subscription_id=$(az account show --query id --output tsv)" -var="tenant_id=$(az account show --query tenantId --output tsv)"
+        working-directory: scripts/terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -var="app_name=example-app" -var="kubernetes_version=1.22.0" -var="subscription_id=$(az account show --query id --output tsv)" -var="tenant_id=$(az account show --query tenantId --output tsv)"
+        working-directory: scripts/terraform
