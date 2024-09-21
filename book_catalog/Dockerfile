@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy the entire project directory
 COPY . .
 
-# Install the dependencies
+# Install the dependenciess
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Set the Python path to include the book_catalog directory
