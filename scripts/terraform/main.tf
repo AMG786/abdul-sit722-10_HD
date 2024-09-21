@@ -1,10 +1,11 @@
 provider "azurerm" {
   features {}
 
-  subscription_id = var.subscription_id
-  client_id       = var.client_id
-  client_secret   = var.client_secret
-  tenant_id       = var.tenant_id
+  # Remove explicit authentication variables to use Azure CLI session
+  # subscription_id = var.subscription_id
+  # client_id       = var.client_id
+  # client_secret   = var.client_secret
+  # tenant_id       = var.tenant_id
 }
 
 # Sets global variables for this Terraform project.
@@ -51,5 +52,5 @@ resource "azurerm_container_registry" "container_registry" {
   resource_group_name = azurerm_resource_group.bmdkamgfinal.name
   location            = var.location
   admin_enabled       = true
-  sku                 = "Basic"
+  sku                 = "Basic"
 }

@@ -32,9 +32,9 @@ jobs:
         working-directory: scripts/terraform
 
       - name: Terraform Plan
-        run: terraform plan -var="app_name=example-app" -var="kubernetes_version=1.22.0" -var="subscription_id=$(az account show --query id --output tsv)" -var="tenant_id=$(az account show --query tenantId --output tsv)"
+        run: terraform plan -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=1.22.0"
         working-directory: scripts/terraform
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="app_name=example-app" -var="kubernetes_version=1.22.0" -var="subscription_id=$(az account show --query id --output tsv)" -var="tenant_id=$(az account show --query tenantId --output tsv)"
+        run: terraform apply -auto-approve -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=1.22.0"
         working-directory: scripts/terraform
