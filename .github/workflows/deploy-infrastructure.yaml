@@ -22,23 +22,22 @@ jobs:
         with:
           terraform_version: 1.5.6
 
-      - name: Log in to Azure using Device Code
-        run: |
-          az login --use-device-code
-          az account set --subscription 0cd94adc-79e1-40a3-9dc0-5fc8b1990326
+      - name: Log in to Azure using Service Principal
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set subscription
+        run: az account set --subscription $(echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r '.subscriptionId')
 
       - name: Terraform Init
         run: terraform init
         working-directory: scripts/terraform
 
       - name: Terraform Plan
-        run: |
-          terraform plan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=1.30.3"
+        run: terraform plan
         working-directory: scripts/terraform
 
       - name: Terraform Apply
-        run: |
-          terraform apply -auto-approve -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="app_name=${{ secrets.APP_NAME }}" -var="kubernetes_version=1.30.3"
+        run: terraform apply -auto-approve
         working-directory: scripts/terraform
-
-        

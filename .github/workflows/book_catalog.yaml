@@ -1,7 +1,7 @@
 name: Deploy book_catalog
 
 on:
-  push: 
+  push:
     branches:
       - master
     paths:
@@ -12,7 +12,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     env:
       VERSION: ${{ github.sha }}
       NAME: book_catalog
@@ -21,20 +21,25 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Log in to Azure
+      - name: Log in to Azure using Service Principal
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Get ACR details and set environment variables
-        run: |
-          ACR_NAME=$(az acr list --query "[0].name" -o tsv)
-          echo "CONTAINER_REGISTRY=${ACR_NAME}.azurecr.io" >> $GITHUB_ENV
-          echo "REGISTRY_UN=${ACR_NAME}" >> $GITHUB_ENV
-          REGISTRY_PW=$(az acr credential show -n ${ACR_NAME} --query "passwords[0].value" -o tsv)
-          echo "REGISTRY_PW=${REGISTRY_PW}" >> $GITHUB_ENV
+      - name: Set subscription
+        run: az account set --subscription $(echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r '.subscriptionId')
 
-      - name: Set permissions for scripts
+      - name: Get Container Registry credentials
+        id: get_acr
+        run: |
+          ACR_NAME=$(az acr list --resource-group $(terraform output -raw resource_group_name) --query "[0].name" -o tsv)
+          ACR_USERNAME=$(az acr credential show --name $ACR_NAME --query username -o tsv)
+          ACR_PASSWORD=$(az acr credential show --name $ACR_NAME --query passwords[0].value -o tsv)
+          echo "::set-output name=acr_name::$ACR_NAME"
+          echo "::set-output name=acr_username::$ACR_USERNAME"
+          echo "::set-output name=acr_password::$ACR_PASSWORD"
+
+      - name: Set permissions for build, push, deploy scripts
         run: |
           chmod +x ./scripts/build-image.sh
           chmod +x ./scripts/push-image.sh
@@ -44,13 +49,15 @@ jobs:
         run: ./scripts/build-image.sh
 
       - name: Publish Docker image
-        run: ./scripts/push-image.sh
-
-      - name: Get AKS credentials
         run: |
-          AKS_NAME=$(az aks list --query "[0].name" -o tsv)
-          az aks get-credentials --name $AKS_NAME --resource-group $(az aks list --query "[0].resourceGroup" -o tsv)
+          export CONTAINER_REGISTRY=${{ steps.get_acr.outputs.acr_name }}
+          export REGISTRY_UN=${{ steps.get_acr.outputs.acr_username }}
+          export REGISTRY_PW=${{ steps.get_acr.outputs.acr_password }}
+          ./scripts/push-image.sh
+
+      - name: Get Kubernetes Config
+        run: |
+          az aks get-credentials --resource-group $(terraform output -raw resource_group_name) --name $(terraform output -raw cluster_name)
 
       - name: Deploy to Kubernetes
-        run: ./scripts/deploy.sh  
-        
+        run: ./scripts/deploy.sh 

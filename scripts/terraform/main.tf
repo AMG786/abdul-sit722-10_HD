@@ -1,24 +1,16 @@
 provider "azurerm" {
   features {}
-
-  # Remove explicit authentication variables to use Azure CLI session
-  subscription_id = var.subscription_id
-  # client_id       = var.client_id
-  # client_secret   = var.client_secret
-  # tenant_id       = var.tenant_id
 }
 
-# Creates a resource group for our two services in Azure account.
-resource "azurerm_resource_group" "bmdkamgfinal786" {
+resource "azurerm_resource_group" "bmdkamgfinal7869" {
   name     = var.app_name
   location = var.location
 }
 
-# Creates a managed Kubernetes cluster on Azuree.
 resource "azurerm_kubernetes_cluster" "cluster" {
   name                = var.app_name
   location            = var.location
-  resource_group_name = azurerm_resource_group.bmdkamgfinal786.name
+  resource_group_name = azurerm_resource_group.bmdkamgfinal7869.name
   dns_prefix          = var.app_name
   kubernetes_version  = var.kubernetes_version
 
@@ -33,29 +25,18 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   }
 }
 
-# Creates a container registry on Azure so that we can publish Docker images.
 resource "azurerm_container_registry" "container_registry" {
   name                = var.app_name
-  resource_group_name = azurerm_resource_group.bmdkamgfinal786.name
+  resource_group_name = azurerm_resource_group.bmdkamgfinal7869.name
   location            = var.location
   admin_enabled       = true
   sku                 = "Basic"
 }
 
-# Output the Container Registry details
-output "container_registry_url" {
-  value = azurerm_container_registry.container_registry.login_server
+output "resource_group_name" {
+  value = azurerm_resource_group.bmdkamgfinal7869.name
 }
 
-output "container_registry_username" {
-  value = azurerm_container_registry.container_registry.admin_username
-}
-
-output "container_registry_password" {
-  value = azurerm_container_registry.container_registry.admin_password
-}
-
-# Output the Kubernetes Cluster Kubeconfig in base64
-output "kubeconfig" {
-  value = base64encode(azurerm_kubernetes_cluster.cluster.kube_admin_config_raw)
+output "cluster_name" {
+  value = azurerm_kubernetes_cluster.cluster.name
 }
