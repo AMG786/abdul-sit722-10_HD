@@ -31,4 +31,4 @@ jobs:
       - name: Run Bandit security check
         run: |
           pip install bandit
-          bandit -r ./book_catalog/app || exit 1  # Fail the job if Bandit finds issues
+          bandit -r book_catalog/app || exit 1  # Fail the job if Bandit finds issues
