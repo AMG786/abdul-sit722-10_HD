@@ -3,14 +3,12 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Copy the entire project directory
-COPY . .
+# Copy the current directory contents into the container at /app
+COPY ./app /app
+# Copy requirements.txt explicitly if it's not in ./app
+COPY ./app/requirements.txt /app/
 
-# Install the dependencies
-RUN pip install --no-cache-dir -r inventory_management/requirements.txt
-
-# Set the Python path to include the book_catalog directory
-ENV PYTHONPATH=/app/inventory_management
+RUN pip install -r requirements.txt
 
 # Expose port 8000
 EXPOSE 9000
