@@ -50,13 +50,18 @@ jobs:
             -var="kubernetes_version=1.30.3"
         working-directory: scripts/terraform
 
+      - name: Verify Terraform State
+        run: terraform show
+        working-directory: scripts/terraform
+
       - name: Get AKS Credentials
         run: |
           RESOURCE_GROUP=$(terraform output -raw resource_group_name)
-          AKS_NAME=$(terraform output -raw aks_cluster_name)  # Update to use the correct output for AKS name
-          az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME
+          AKS_NAME=$(terraform output -raw aks_cluster_name)
+          az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME --overwrite-existing
           kubectl config view --raw > kubeconfig
-          echo "KUBE_CONFIG=$(base64 -w 0 kubeconfig)" >> $GITHUB_ENV  # Store kubeconfig in environment variable
+          echo "KUBE_CONFIG=$(base64 -w 0 kubeconfig)" >> $GITHUB_ENV
+        working-directory: scripts/terraform
 
       - name: Fetch Terraform Outputs
         id: fetch_outputs
@@ -64,4 +69,16 @@ jobs:
           echo "CONTAINER_REGISTRY=$(terraform output -raw container_registry)" >> $GITHUB_ENV
           echo "REGISTRY_UN=$(terraform output -raw registry_username)" >> $GITHUB_ENV
           echo "REGISTRY_PW=$(terraform output -raw registry_password)" >> $GITHUB_ENV
-          echo "KUBE_CONFIG=$(terraform output -raw kubeconfig)" >> $GITHUB_ENV  # Fetch kubeconfig dynamically
+          echo "KUBE_CONFIG=$(terraform output -raw kubeconfig)" >> $GITHUB_ENV
+        working-directory: scripts/terraform
+
+      - name: Debug Outputs
+        run: |
+          echo "Resource Group: ${{ env.RESOURCE_GROUP }}"
+          echo "AKS Cluster Name: ${{ env.AKS_NAME }}"
+          echo "Container Registry: ${{ env.CONTAINER_REGISTRY }}"
+          echo "Registry Username: ${{ env.REGISTRY_UN }}"
+          echo "Kubeconfig is set: ${{ env.KUBE_CONFIG != '' }}"
+        env:
+          RESOURCE_GROUP: ${{ steps.fetch_outputs.outputs.resource_group_name }}
+          AKS_NAME: ${{ steps.fetch_outputs.outputs.aks_cluster_name }}
