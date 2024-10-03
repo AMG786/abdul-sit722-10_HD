@@ -1,6 +1,7 @@
 output "kubeconfig" {
-  value       = azurerm_kubernetes_cluster.cluster.kube_admin_config[0]
-  description = "The kubeconfig file for the AKS cluster."
+  value       = azurerm_kubernetes_cluster.cluster.kube_admin_config
+  sensitive   = true
+  description = "The kubeconfig file for the AKS cluster."
 }
 
 output "container_registry" {
@@ -27,13 +28,13 @@ output "aks_cluster_name" {
 }
 
 output "resource_group_name" {
-  value       = azurerm_resource_group.bmdksub2.name
+  value       = azurerm_resource_group.bmdksub3.name
   sensitive   = true
   description = "The name of the resource group."
 }
 
 output "location" {
-  value       = azurerm_resource_group.bmdksub2.location
+  value       = azurerm_resource_group.bmdksub3.location
   sensitive   = true
   description = "The Azure region where the resources are deployed."
 }
