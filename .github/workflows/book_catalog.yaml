@@ -1,4 +1,4 @@
-name: Deploy book_catalog
+name: Security Check
 
 on:
   # Trigger the workflow on push to the master branch or changes to book_catalog directory
@@ -9,45 +9,44 @@ on:
       - book_catalog/**
 
   # Allows the workflow to be triggered manually
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  security:
     runs-on: ubuntu-latest
-    
+
     env:
-      VERSION: ${{ github.sha }}
-      CONTAINER_REGISTRY: ${{ secrets.CONTAINER_REGISTRY }}
-      REGISTRY_UN: ${{ secrets.REGISTRY_UN }}
-      REGISTRY_PW: ${{ secrets.REGISTRY_PW  }}
-      NAME: book_catalog
-      DIRECTORY: book_catalog
+      IMAGE_NAME: book_catalog:latest
 
     steps:
       # Checkout the code
       - uses: actions/checkout@v3
 
-      # Set executable permissions for all necessary scripts
-      - name: Set permissions for build, push, deploy scripts
+      # Run Bandit to check Python code security issues
+      - name: Run Bandit security check
         run: |
-          chmod +x ./scripts/build-image.sh
-          chmod +x ./scripts/push-image.sh
-          chmod +x ./scripts/deploy.sh
+          pip install bandit
+          bandit -r ./book_catalog
+
+      # Install Docker to allow building and scanning images
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
 
       # Build the Docker image
       - name: Build Docker image
-        run: ./scripts/build-image.sh
+        run: docker build -t ${{ env.IMAGE_NAME }} ./book_catalog
 
-      # Push the Docker image to the container registry
-      - name: Publish Docker image
-        run: ./scripts/push-image.sh
+      # Install Trivy
+      - name: Install Trivy
+        run: |
+          sudo apt-get install -y wget
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.42.0/trivy_0.42.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.42.0_Linux-64bit.deb
 
-      # Install Kubectl and configure it with the cluster
-      - uses: tale/kubectl-action@v1
-        with:
-          base64-kube-config: ${{ secrets.KUBE_CONFIG }}
-          kubectl-version: v1.24.2
-
-      # Deploy the microservice to Kubernetes
-      - name: Deploy to Kubernetes
-        run: ./scripts/deploy.sh
+      # Scan Docker image for vulnerabilities using Trivy
+      - name: Run Trivy vulnerability scan on Docker image
+        run: trivy image --severity HIGH,CRITICAL ${{ env.IMAGE_NAME }}
