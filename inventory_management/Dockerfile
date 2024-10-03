@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install --no-cache-dir -r inventory_management/requirements.txt
+RUN pip install --no-cache-dir -r inventory_management/app/requirements.txt
 
 ENV PYTHONPATH=/app/inventory_management
 

@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN pip install --no-cache-dir -r book_catalog/requirements.txt
+RUN pip install --no-cache-dir -r book_catalog/app/requirements.txt
 
 ENV PYTHONPATH=/app/book_catalog
 
