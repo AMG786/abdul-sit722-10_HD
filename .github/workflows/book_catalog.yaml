@@ -1,52 +1,51 @@
-name: Security Check
+name: Deploy book_catalog
 
 on:
-  # Trigger the workflow on push to the master branch or changes to book_catalog directory
   push: 
     branches:
       - master
     paths:
       - book_catalog/**
-
-  # Allows the workflow to be triggered manually
-  workflow_dispatch:
+  workflow_dispatch: 
 
 jobs:
-  security:
+  deploy:
     runs-on: ubuntu-latest
-
+    
     env:
-      IMAGE_NAME: book_catalog:latest
+      VERSION: ${{ github.sha }}
+      CONTAINER_REGISTRY: ${{ env.CONTAINER_REGISTRY }}
+      REGISTRY_UN: ${{ env.REGISTRY_UN }}
+      REGISTRY_PW: ${{ env.REGISTRY_PW }}
+      NAME: book_catalog
+      DIRECTORY: book_catalog
+      KUBE_CONFIG: ${{ env.KUBE_CONFIG }}  # Use the variable directly
 
     steps:
       # Checkout the code
       - uses: actions/checkout@v3
 
-      # Run Bandit to check Python code security issues
-      - name: Run Bandit security check
+      # Set executable permissions for all necessary scripts
+      - name: Set permissions for build, push, deploy scripts
         run: |
-          pip install bandit
-          bandit -r ./book_catalog
-
-      # Install Docker to allow building and scanning images
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-          sudo systemctl start docker
-          sudo systemctl enable docker
+          chmod +x ./scripts/build-image.sh
+          chmod +x ./scripts/push-image.sh
+          chmod +x ./scripts/deploy.sh
 
       # Build the Docker image
       - name: Build Docker image
-        run: docker build -t ${{ env.IMAGE_NAME }} ./book_catalog
+        run: ./scripts/build-image.sh
 
-      # Install Trivy
-      - name: Install Trivy
-        run: |
-          sudo apt-get install -y wget
-          wget https://github.com/aquasecurity/trivy/releases/download/v0.42.0/trivy_0.42.0_Linux-64bit.deb
-          sudo dpkg -i trivy_0.42.0_Linux-64bit.deb
+      # Push the Docker image to the container registry
+      - name: Publish Docker image
+        run: ./scripts/push-image.sh
 
-      # Scan Docker image for vulnerabilities using Trivy
-      - name: Run Trivy vulnerability scan on Docker image
-        run: trivy image --severity HIGH,CRITICAL ${{ env.IMAGE_NAME }}
+      # Install Kubectl and configure it with the cluster
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ env.KUBE_CONFIG }}  # Use the variable directly
+          kubectl-version: v1.24.2
+
+      # Deploy the microservice to Kubernetes
+      - name: Deploy to Kubernetes
+        run: ./scripts/deploy.sh 

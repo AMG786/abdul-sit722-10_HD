@@ -54,4 +54,12 @@ jobs:
         run: |
           az aks get-credentials --resource-group ${local.app_name} --name ${local.app_name}
           kubectl config view --raw > kubeconfig
-          echo "KUBE_CONFIG=$(base64 -w 0 kubeconfig)" >> $GITHUB_ENV
+          echo "KUBE_CONFIG=$(base64 -w 0 kubeconfig)" >> $GITHUB_ENV  # Store kubeconfig in environment variable
+
+      - name: Fetch Terraform Outputs
+        id: fetch_outputs
+        run: |
+          echo "CONTAINER_REGISTRY=$(terraform output -raw container_registry)" >> $GITHUB_ENV
+          echo "REGISTRY_UN=$(terraform output -raw registry_username)" >> $GITHUB_ENV
+          echo "REGISTRY_PW=$(terraform output -raw registry_password)" >> $GITHUB_ENV
+          echo "KUBE_CONFIG=$(terraform output -raw kubeconfig)" >> $GITHUB_ENV  # Fetch kubeconfig dynamically
