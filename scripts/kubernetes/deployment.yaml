@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: book-catalog
-        image: abdulmueez800so.azurecr.io/book-catalog:$VERSION
+        image: abdulmueez801so.azurecr.io/book-catalog:$VERSION
         ports:
         - containerPort: 8000
         
@@ -51,7 +51,7 @@ spec:
     spec:
       containers:
       - name: inventory-management
-        image: abdulmueez800so.azurecr.io/inventory-management:$VERSION
+        image: abdulmueez801so.azurecr.io/inventory-management:$VERSION
         ports:
         - containerPort: 8000
         
