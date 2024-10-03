@@ -1,25 +1,20 @@
-
-version: '3'
+version: '3.8'
 
 services:
   book_catalog:
-    image: book_catalog
-    build:
+    image: book-catalog
+    build: 
       context: ./book_catalog
       dockerfile: Dockerfile
-    container_name: book_catalog
+    container_name: book-catalog
     ports:
-      - "8000:8000"
-    environment:
-      DATABASE_URL: postgresql://db_test_wb53_user:E0IJfLJaXOXR86Wx0X6ZCBmhsNLD8HQB@dpg-crn8mb08fa8c738bb4gg-a.oregon-postgres.render.com/db_test_wb53
-
+      - "8000:8000" # Maps port 8000 on the host to port 8000 in the container
+   
   inventory_management:
-    image: inventory_management
+    image: inventory-management
     build:
       context: ./inventory_management
       dockerfile: Dockerfile
-    container_name: inventory_management  
+    container_name: inventory-management
     ports:
-      - "9000:9000"
-    environment:
-      DATABASE_URL: postgresql://db_test_wb53_user:E0IJfLJaXOXR86Wx0X6ZCBmhsNLD8HQB@dpg-crn8mb08fa8c738bb4gg-a.oregon-postgres.render.com/db_test_wb53
+      - "8001:8000" # Maps port 8001 on the host to port 8000 in the container

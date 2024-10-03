@@ -1,15 +1,11 @@
-# 
-# Remove containers from Kubernetes.
 #
-# Environment variables:
+# Destroy the Node.js microservice on Kubernetes.
 #
-#   NAME - The name of the microservice to delete.
-#
-# Usage:
-#
-#   ./scripts/cd/delete.sh
-#
-set -u # or set -o nounset
-: "$NAME"
 
-envsubst < ./scripts/${NAME}.yaml | kubectl delete -f -
+az aks get-credentials --resource-group $AZURE_RG --name $AZURE_AKS --overwrite-existing
+
+kubectl get pods
+
+envsubst < ./scripts/kubernetes/deployment.yaml | kubectl delete -f -
+
+kubectl get pods
