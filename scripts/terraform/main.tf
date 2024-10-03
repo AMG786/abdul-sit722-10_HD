@@ -1,25 +1,29 @@
 provider "azurerm" {
   features {}
 
-  # Remove explicit authentication variables to use Azure CLI session
   subscription_id = var.subscription_id
-  # client_id       = var.client_id
-  # client_secret   = var.client_secret
-  # tenant_id       = var.tenant_id
+  client_id       = var.client_id
+  client_secret   = var.client_secret
+  tenant_id       = var.tenant_id
 }
 
-# Creates a resource group for our two services in Azure account.
-resource "azurerm_resource_group" "bmsok1" {
-  name     = var.app_name
+# Hardcoded application name
+locals {
+  app_name = "bmdksub1"  # Replace with your desired app name
+}
+
+# Creates a resource group for our services in Azure account.
+resource "azurerm_resource_group" "bmdksub1" {
+  name     = local.app_name
   location = var.location
 }
 
-# Creates a managed Kubernetes cluster on Azuree.
+# Creates a managed Kubernetes cluster on Azure.
 resource "azurerm_kubernetes_cluster" "cluster" {
-  name                = var.app_name
+  name                = local.app_name
   location            = var.location
-  resource_group_name = azurerm_resource_group.bmsok1.name
-  dns_prefix          = var.app_name
+  resource_group_name = azurerm_resource_group.bmdksub1.name
+  dns_prefix          = local.app_name
   kubernetes_version  = var.kubernetes_version
 
   default_node_pool {
@@ -35,9 +39,9 @@ resource "azurerm_kubernetes_cluster" "cluster" {
 
 # Creates a container registry on Azure so that we can publish Docker images.
 resource "azurerm_container_registry" "container_registry" {
-  name                = var.app_name
-  resource_group_name = azurerm_resource_group.bmsok1.name
+  name                = local.app_name
+  resource_group_name = azurerm_resource_group.bmdksub1.name
   location            = var.location
   admin_enabled       = true
-  sku                 = "Basic"
+  sku                 = "Basic"
 }

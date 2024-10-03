@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - scripts/terraform/**
-  
   workflow_dispatch:
 
 jobs:
@@ -14,40 +13,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.6
 
-      # Step 3: Login to Azure using OIDC
-      - name: Login to Azure
-        run: |
-          # This step uses the OIDC authentication without GitHub Secrets
-          az login --identity
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Step 4: Set the subscription (replace <your-subscription-id> with your actual ID)
-      - name: Set Azure Subscription
-        run: |
-          az account set --subscription 0cd94adc-79e1-40a3-9dc0-5fc8b1990326
-
-      # Step 5: Terraform Init
       - name: Terraform Init
         run: terraform init
         working-directory: scripts/terraform
 
-      # Step 6: Terraform Plan
       - name: Terraform Plan
         run: |
-          terraform plan -var="app_name=bmsok1" -var="kubernetes_version=1.30.3"
+          terraform plan \
+            -var="subscription_id=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .subscriptionId)" \
+            -var="client_id=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" \
+            -var="client_secret=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" \
+            -var="tenant_id=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" \
+            -var="kubernetes_version=1.30.3"
         working-directory: scripts/terraform
 
-      # Step 7: Terraform Apply
       - name: Terraform Apply
         run: |
-          terraform apply -auto-approve -var="app_name=bmsok1" -var="kubernetes_version=1.30.3"
+          terraform apply -auto-approve \
+            -var="subscription_id=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .subscriptionId)" \
+            -var="client_id=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientId)" \
+            -var="client_secret=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .clientSecret)" \
+            -var="tenant_id=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r .tenantId)" \
+            -var="kubernetes_version=1.30.3"
         working-directory: scripts/terraform
+
+      - name: Get AKS Credentials
+        run: |
+          az aks get-credentials --resource-group ${local.app_name} --name ${local.app_name}
+          kubectl config view --raw > kubeconfig
+          echo "KUBE_CONFIG=$(base64 -w 0 kubeconfig)" >> $GITHUB_ENV
