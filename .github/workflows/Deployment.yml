@@ -55,6 +55,9 @@ jobs:
         uses: KengoTODA/actions-setup-docker-compose@v1
         with:
           version: '2.14.2'
+          
+      - name: Give execute permissions to build-image.sh
+        run: chmod +x ./scripts/build-image.sh
 
       - name: Build
         run: ./scripts/build-image.sh

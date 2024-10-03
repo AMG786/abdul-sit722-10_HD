@@ -15,7 +15,7 @@ RUN pip install -r requirements.txt
 EXPOSE 8000
 
 # Define environment variable
-ENV DATABASE_URL postgresql://tamim_shahriar_sit722_part5_user:uHoCv6IsSXNapYodbDBnIxo6wA6rNLh3@dpg-crjoaqd2ng1s73fis4c0-a.oregon-postgres.render.com/tamim_shahriar_sit722_part5
+ENV DATABASE_URL postgresql://db_abdulmueez_user:tRs0ebLvEbmhUza2y1u0WKB9g0zh0yLL@dpg-crv5snlds78s73a8vjpg-a.oregon-postgres.render.com/db_abdulmueez
 
 # Run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
