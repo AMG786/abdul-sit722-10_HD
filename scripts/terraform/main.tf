@@ -7,7 +7,7 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# Hardcoded application name
+# Hardcoded application namee
 locals {
   app_name = "bmdksub5"  # Replace with your desired app name
 }
