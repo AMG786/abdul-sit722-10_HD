@@ -54,30 +54,31 @@ jobs:
         run: terraform show
         working-directory: scripts/terraform
 
-      - name: Get AKS Credentials
+      - name: Get Terraform Outputs
+        id: terraform_output
         run: |
-          RESOURCE_GROUP=$(terraform output -json resource_group_name | jq -r '.')
-          AKS_NAME=$(terraform output -json aks_cluster_name | jq -r '.')
-          az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_NAME --overwrite-existing
-          kubectl config view --raw > kubeconfig
-          echo "KUBE_CONFIG=$(base64 -w 0 kubeconfig)" >> $GITHUB_ENV
+          echo "RESOURCE_GROUP=$(terraform output -json resource_group_name | jq -r '. // empty')" >> $GITHUB_OUTPUT
+          echo "AKS_NAME=$(terraform output -json aks_cluster_name | jq -r '. // empty')" >> $GITHUB_OUTPUT
+          echo "CONTAINER_REGISTRY=$(terraform output -json container_registry | jq -r '. // empty')" >> $GITHUB_OUTPUT
+          echo "REGISTRY_UN=$(terraform output -json registry_username | jq -r '. // empty')" >> $GITHUB_OUTPUT
+          echo "REGISTRY_PW=$(terraform output -json registry_password | jq -r '. // empty')" >> $GITHUB_OUTPUT
+          KUBE_CONFIG=$(terraform output -json kubeconfig | jq -r '. // empty')
+          echo "KUBE_CONFIG<<EOF" >> $GITHUB_OUTPUT
+          echo "$KUBE_CONFIG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
         working-directory: scripts/terraform
 
-      - name: Fetch Terraform Outputs
-        id: fetch_outputs
+      - name: Get AKS Credentials
+        if: steps.terraform_output.outputs.RESOURCE_GROUP != '' && steps.terraform_output.outputs.AKS_NAME != ''
         run: |
-          echo "CONTAINER_REGISTRY=$(terraform output -json container_registry | jq -r '.')" >> $GITHUB_ENV
-          echo "REGISTRY_UN=$(terraform output -json registry_username | jq -r '.')" >> $GITHUB_ENV
-          echo "REGISTRY_PW=$(terraform output -json registry_password | jq -r '.')" >> $GITHUB_ENV
-          echo "KUBE_CONFIG=$(terraform output -json kubeconfig | jq -r '.')" >> $GITHUB_ENV
-          echo "RESOURCE_GROUP=$(terraform output -json resource_group_name | jq -r '.')" >> $GITHUB_ENV
-          echo "AKS_NAME=$(terraform output -json aks_cluster_name | jq -r '.')" >> $GITHUB_ENV
-        working-directory: scripts/terraform
+          az aks get-credentials --resource-group ${{ steps.terraform_output.outputs.RESOURCE_GROUP }} --name ${{ steps.terraform_output.outputs.AKS_NAME }} --overwrite-existing
+          kubectl config view --raw > kubeconfig
+          echo "KUBE_CONFIG=$(base64 -w 0 kubeconfig)" >> $GITHUB_ENV
 
       - name: Debug Outputs
         run: |
-          echo "Resource Group: ${{ env.RESOURCE_GROUP }}"
-          echo "AKS Cluster Name: ${{ env.AKS_NAME }}"
-          echo "Container Registry: ${{ env.CONTAINER_REGISTRY }}"
-          echo "Registry Username: ${{ env.REGISTRY_UN }}"
-          echo "Kubeconfig is set: ${{ env.KUBE_CONFIG != '' }}"
+          echo "Resource Group: ${{ steps.terraform_output.outputs.RESOURCE_GROUP }}"
+          echo "AKS Cluster Name: ${{ steps.terraform_output.outputs.AKS_NAME }}"
+          echo "Container Registry: ${{ steps.terraform_output.outputs.CONTAINER_REGISTRY }}"
+          echo "Registry Username: ${{ steps.terraform_output.outputs.REGISTRY_UN }}"
+          echo "Kubeconfig is set: ${{ steps.terraform_output.outputs.KUBE_CONFIG != '' }}"
