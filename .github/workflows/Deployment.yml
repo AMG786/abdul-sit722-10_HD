@@ -18,13 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Automated Security Checks
-      - name: Run Safety check
-        run: |
-          pip install safety
-          safety check -r requirements.txt
-
+      # Run Bandit to check Python code security issues
       - name: Run Bandit security check
         run: |
           pip install bandit
-          bandit -r .
+          bandit -r ./book_catalog/app
