@@ -6,5 +6,5 @@ resource "azurerm_container_registry" "container_registry" {
   resource_group_name = azurerm_resource_group.bookcatalog.name
   location            = var.location
   admin_enabled       = true
-  sku                 = "Basic"
+  sku                 = "Basic"
 }

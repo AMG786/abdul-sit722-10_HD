@@ -1,13 +1,13 @@
 # Sets global variables for this Terraform project.
 
-variable app_name {
+variable "app_name" {
   default = "abdulmueez786so"
 }
 
-variable location {
+variable "location" {
   default = "australiasoutheast"
 }
 
-variable kubernetes_version {    
-  default = "1.30.3"
+variable "kubernetes_version" {
+  default = "1.30.3"
 }

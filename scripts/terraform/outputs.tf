@@ -10,7 +10,7 @@ output "acr_username" {
 
 # Output for ACR login password
 output "acr_password" {
-  value = azurerm_container_registry.container_registry.admin_password
+  value     = azurerm_container_registry.container_registry.admin_password
   sensitive = true
 }
 
