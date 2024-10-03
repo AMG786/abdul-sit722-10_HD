@@ -54,20 +54,6 @@ jobs:
         run: terraform show
         working-directory: scripts/terraform
 
-      - name: Get Terraform Outputs
-        id: terraform_output
-        run: |
-          echo "RESOURCE_GROUP=$(terraform output -json resource_group_name | jq -r '. // empty')" >> $GITHUB_OUTPUT
-          echo "AKS_NAME=$(terraform output -json aks_cluster_name | jq -r '. // empty')" >> $GITHUB_OUTPUT
-          echo "CONTAINER_REGISTRY=$(terraform output -json container_registry | jq -r '. // empty')" >> $GITHUB_OUTPUT
-          echo "REGISTRY_UN=$(terraform output -json registry_username | jq -r '. // empty')" >> $GITHUB_OUTPUT
-          echo "REGISTRY_PW=$(terraform output -json registry_password | jq -r '. // empty')" >> $GITHUB_OUTPUT
-          KUBE_CONFIG=$(terraform output -json kubeconfig | jq -r '. // empty')
-          echo "KUBE_CONFIG<<EOF" >> $GITHUB_OUTPUT
-          echo "$KUBE_CONFIG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-        working-directory: scripts/terraform
-
       - name: Get AKS Credentials
         if: steps.terraform_output.outputs.RESOURCE_GROUP != '' && steps.terraform_output.outputs.AKS_NAME != ''
         run: |

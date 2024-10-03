@@ -28,13 +28,13 @@ output "aks_cluster_name" {
 }
 
 output "resource_group_name" {
-  value       = azurerm_resource_group.bmdksub8.name
+  value       = azurerm_resource_group.bmdksub9.name
   sensitive   = true
   description = "The name of the resource group."
 }
 
 output "location" {
-  value       = azurerm_resource_group.bmdksub8.location
+  value       = azurerm_resource_group.bmdksub9.location
   sensitive   = true
   description = "The Azure region where the resources are deployed."
 }
