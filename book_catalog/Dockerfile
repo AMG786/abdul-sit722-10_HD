@@ -17,5 +17,5 @@ ENV DATABASE_URL postgresql://db_abdulmueez_user:tRs0ebLvEbmhUza2y1u0WKB9g0zh0yL
 
 
 # Run the FastAPI app with uvicorn
-CMD ["uvicorn", "book_catalog.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "book_catalog.main:app", "--host", "0.0.0.0", "--port","8000"]
 
