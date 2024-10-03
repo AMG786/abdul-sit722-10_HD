@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - book_catalog/**
+
   workflow_dispatch: 
 
 jobs:
@@ -14,38 +15,42 @@ jobs:
     
     env:
       VERSION: ${{ github.sha }}
-      CONTAINER_REGISTRY: ${{ env.CONTAINER_REGISTRY }}
-      REGISTRY_UN: ${{ env.REGISTRY_UN }}
-      REGISTRY_PW: ${{ env.REGISTRY_PW }}
       NAME: book_catalog
       DIRECTORY: book_catalog
-      KUBE_CONFIG: ${{ env.KUBE_CONFIG }}  # Use the variable directly
 
     steps:
-      # Checkout the code
       - uses: actions/checkout@v3
 
-      # Set executable permissions for all necessary scripts
-      - name: Set permissions for build, push, deploy scripts
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get ACR details and set environment variables
+        run: |
+          ACR_NAME=$(az acr list --query "[0].name" -o tsv)
+          echo "CONTAINER_REGISTRY=${ACR_NAME}.azurecr.io" >> $GITHUB_ENV
+          echo "REGISTRY_UN=${ACR_NAME}" >> $GITHUB_ENV
+          REGISTRY_PW=$(az acr credential show -n ${ACR_NAME} --query "passwords[0].value" -o tsv)
+          echo "REGISTRY_PW=${REGISTRY_PW}" >> $GITHUB_ENV
+
+      - name: Set permissions for scripts
         run: |
           chmod +x ./scripts/build-image.sh
           chmod +x ./scripts/push-image.sh
           chmod +x ./scripts/deploy.sh
 
-      # Build the Docker image
       - name: Build Docker image
         run: ./scripts/build-image.sh
 
-      # Push the Docker image to the container registry
       - name: Publish Docker image
         run: ./scripts/push-image.sh
 
-      # Install Kubectl and configure it with the cluster
-      - uses: tale/kubectl-action@v1
-        with:
-          base64-kube-config: ${{ env.KUBE_CONFIG }}  # Use the variable directly
-          kubectl-version: v1.24.2
+      - name: Get AKS credentials
+        run: |
+          AKS_NAME=$(az aks list --query "[0].name" -o tsv)
+          az aks get-credentials --name $AKS_NAME --resource-group $(az aks list --query "[0].resourceGroup" -o tsv)
 
-      # Deploy the microservice to Kubernetes
       - name: Deploy to Kubernetes
-        run: ./scripts/deploy.sh 
+        run: ./scripts/deploy.sh  
+        

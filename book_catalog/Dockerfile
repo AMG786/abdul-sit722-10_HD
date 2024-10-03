@@ -11,7 +11,7 @@ COPY . .
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Set the Python path to include the book_catalog directory
+# Set the Python path to include the book_catalog directoryy
 ENV PYTHONPATH=/app/book_catalog
 
 # Change ownership and switch to non-root user
