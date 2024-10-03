@@ -9,11 +9,11 @@ provider "azurerm" {
 
 # Hardcoded application name
 locals {
-  app_name = "bmdksub4"  # Replace with your desired app name
+  app_name = "bmdksub5"  # Replace with your desired app name
 }
 
 # Creates a resource group for our services in Azure account.
-resource "azurerm_resource_group" "bmdksub4" {
+resource "azurerm_resource_group" "bmdksub5" {
   name     = local.app_name
   location = var.location
 }
@@ -22,7 +22,7 @@ resource "azurerm_resource_group" "bmdksub4" {
 resource "azurerm_kubernetes_cluster" "cluster" {
   name                = local.app_name
   location            = var.location
-  resource_group_name = azurerm_resource_group.bmdksub4.name
+  resource_group_name = azurerm_resource_group.bmdksub5.name
   dns_prefix          = local.app_name
   kubernetes_version  = var.kubernetes_version
 
@@ -37,10 +37,10 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   }
 }
 
-# Creates a container registry on Azure so that we can publish Docker images.
+# Creates a container registry on Azure so that we can publish Docker imagess.
 resource "azurerm_container_registry" "container_registry" {
   name                = local.app_name
-  resource_group_name = azurerm_resource_group.bmdksub4.name
+  resource_group_name = azurerm_resource_group.bmdksub5.name
   location            = var.location
   admin_enabled       = true
   sku                 = "Basic"
