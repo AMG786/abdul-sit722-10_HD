@@ -77,11 +77,11 @@ jobs:
           base64-kube-config: ${{ secrets.KUBE_CONFIG }}
           kubectl-version: v1.24.2
       
-      - name: Set execute permission for deploy.sh
+      - name: Set execute permission for the deploy.sh
         run: chmod +x ./scripts/deploy.sh
       
       - name: Deploy
         env:
           AZURE_RG: ${{steps.tf.outputs.AZURE_RG}}
           AZURE_AKS: ${{steps.tf.outputs.AZURE_AKS}}
-        run: ./scripts/deploy.sh 
+        run: ./scripts/deploy.sh  
