@@ -80,7 +80,7 @@ jobs:
       - name: Decode kubeconfig
         run: echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
       
-      - name: Fix kubeconfig permissions
+      - name: Fix kubeconfig permission
         run: chmod 600 ~/.kube/config
 
       - name: Set execute permission for the deploy.sh
