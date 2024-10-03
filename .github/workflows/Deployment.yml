@@ -76,12 +76,13 @@ jobs:
         with:
           base64-kube-config: ${{ secrets.KUBE_CONFIG }}
           kubectl-version: v1.24.2
-            - name: Decode kubeconfig
+      
+      - name: Decode kubeconfig
         run: echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
       
       - name: Fix kubeconfig permissions
         run: chmod 600 ~/.kube/config
-        
+
       - name: Set execute permission for the deploy.sh
         run: chmod +x ./scripts/deploy.sh
       
