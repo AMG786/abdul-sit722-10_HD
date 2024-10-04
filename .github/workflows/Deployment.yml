@@ -25,10 +25,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r book_catalog/app/requirements.txt  # Install your project's dependencies
+          pip install -r book_catalog/app/requirements.txt
 
-      # Run Bandit to check Python code security issues
       - name: Run Bandit security check
         run: |
           pip install bandit
-          bandit -r book_catalog/app   # Fail the job if Bandit finds issues
+          bandit -r book_catalog/app -o bandit_report.json -f json || exit 1
+
+      - name: Install Safety
+        run: |
+          pip install safety
