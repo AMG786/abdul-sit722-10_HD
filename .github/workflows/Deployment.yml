@@ -113,6 +113,21 @@ jobs:
       - name: Build Docker image
         run: ./scripts/build-image.sh
 
+      - name: Set execute permission for push-image.sh
+        run: chmod +x ./scripts/push-image.sh
+
+      - name: Publish Docker image
+        env:
+          CONTAINER_REGISTRY: ${{steps.tf.outputs.ACR_NAME}}
+          REGISTRY_UN: ${{steps.tf.outputs.ACR_UN}}
+          REGISTRY_PW: ${{steps.tf.outputs.ACR_PW}}
+        run: ./scripts/push-image.sh
+
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBE_CONFIG }}
+          kubectl-version: v1.24.2
+
       # Add Trivy container image scanning with enhanced logging
       - name: Install Trivy
         run: |
@@ -164,22 +179,7 @@ jobs:
             echo "Critical vulnerabilities found by Trivy, failing the build."
             exit 1
           fi
-
-      - name: Set execute permission for push-image.sh
-        run: chmod +x ./scripts/push-image.sh
-
-      - name: Publish Docker image
-        env:
-          CONTAINER_REGISTRY: ${{steps.tf.outputs.ACR_NAME}}
-          REGISTRY_UN: ${{steps.tf.outputs.ACR_UN}}
-          REGISTRY_PW: ${{steps.tf.outputs.ACR_PW}}
-        run: ./scripts/push-image.sh
-
-      - uses: tale/kubectl-action@v1
-        with:
-          base64-kube-config: ${{ secrets.KUBE_CONFIG }}
-          kubectl-version: v1.24.2
-
+          
       - name: Decode kubeconfig
         run: echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
 
