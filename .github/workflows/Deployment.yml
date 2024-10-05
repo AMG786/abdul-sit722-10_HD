@@ -1,17 +1,14 @@
 name: Deploy microservice
 
 on:
-
   push:
     branches:
       - master
-
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
-  
   deploy:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     env:
       VERSION: ${{ github.sha }}
       TF_VERSION: '1.0.0'  # Specify Terraform version
@@ -66,7 +63,6 @@ jobs:
             exit 1
           fi
 
-
       - name: Login to Azure
         uses: azure/login@v1
         with:
@@ -110,10 +106,36 @@ jobs:
 
       - name: Build
         run: ./scripts/build-image.sh
-      
+
+      # Add Trivy container image scanning
+      - name: Install Trivy
+        run: |
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+
+      - name: Scan Docker image with Trivy
+        run: trivy image --severity HIGH,CRITICAL ${CONTAINER_REGISTRY}/book_catalog:${{ env.VERSION }} > trivy_report.txt || echo "Trivy scan found vulnerabilities"
+
+      - name: Upload Trivy report
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-report
+          path: trivy_report.txt
+
+      # Fail the build if Trivy finds critical vulnerabilities
+      - name: Check for critical vulnerabilities in Trivy scan
+        run: |
+          if grep -q 'CRITICAL' trivy_report.txt; then
+            echo "Critical vulnerabilities found by Trivy, failing the build."
+            exit 1
+          fi
+
       - name: Set execute permission for push-image.sh
         run: chmod +x ./scripts/push-image.sh
-  
+
       - name: Publish
         env:
           CONTAINER_REGISTRY: ${{steps.tf.outputs.ACR_NAME}}
@@ -125,18 +147,18 @@ jobs:
         with:
           base64-kube-config: ${{ secrets.KUBE_CONFIG }}
           kubectl-version: v1.24.2
-      
+
       - name: Decode kubeconfig
         run: echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
-      
+
       - name: Fix kubeconfig permission
         run: chmod 600 ~/.kube/config
 
       - name: Set execute permission for the deploy.sh
         run: chmod +x ./scripts/deploy.sh
-      
+
       - name: Deploy
         env:
           AZURE_RG: ${{steps.tf.outputs.AZURE_RG}}
           AZURE_AKS: ${{steps.tf.outputs.AZURE_AKS}}
-        run: ./scripts/deploy.sh  
+        run: ./scripts/deploy.sh
