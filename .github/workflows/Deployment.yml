@@ -52,16 +52,21 @@ jobs:
           path: safety_report.json
 
       # Fail the job if vulnerabilities are found in Bandit or Safety
-      - name: Check for vulnerabilities
+      # Fail the job if vulnerabilities are found in Bandit or Safety
+      - name: Check for vulnerabilities in Bandit
         run: |
           if grep -q '"issue_severity":' bandit_report.json; then
             echo "Bandit found vulnerabilities, failing the build."
             exit 1
           fi
+
+      - name: Check for vulnerabilities in Safety
+        run: |
           if grep -q '"vulnerabilities":' safety_report.json; then
-            echo "Safety found vulnerabilities, failing the build."
-            exit 1
+           echo "Safety found vulnerabilities, failing the build."
+           exit 1
           fi
+
 
       - name: Login to Azure
         uses: azure/login@v1
