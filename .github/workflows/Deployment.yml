@@ -151,5 +151,10 @@ jobs:
           AZURE_RG: ${{steps.tf.outputs.AZURE_RG}}
           AZURE_AKS: ${{steps.tf.outputs.AZURE_AKS}}
         run: ./scripts/deploy.sh
+      
+      - name: Simulate Crash
+        run: |
+          echo "Simulating crash for rollback demo."
+          exit 1  # This will simulate a failure
 
 
