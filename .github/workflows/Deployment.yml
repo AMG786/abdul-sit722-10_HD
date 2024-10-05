@@ -113,6 +113,9 @@ jobs:
       - name: Build Docker image
         run: ./scripts/build-image.sh
 
+      - name: Image Name
+        run: echo "${CONTAINER_REGISTRY}/book_catalog:${{ env.VERSION }}"
+
       # Add Trivy container image scanning with enhanced logging
       - name: Install Trivy
         run: |
