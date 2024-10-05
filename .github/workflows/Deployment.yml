@@ -68,3 +68,112 @@ jobs:
             cat safety_report.json
             
           fi
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: ./scripts/terraform
+        run: terraform init
+
+      - name: Terraform Apply
+        id: terraform
+        working-directory: ./scripts/terraform
+        run: terraform apply -auto-approve
+
+      - name: Retrieve Registry Info from Terraform Outputs
+        id: tf
+        working-directory: ./scripts/terraform
+        run: |
+          echo "ACR_NAME=$(terraform output -raw acr_login_server)" >> $GITHUB_OUTPUT
+          echo "ACR_UN=$(terraform output -raw acr_username)" >> $GITHUB_OUTPUT
+          echo "ACR_PW=$(terraform output -raw acr_password)" >> $GITHUB_OUTPUT
+          echo "AZURE_RG=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+          echo "AZURE_AKS=$(terraform output -raw aks_name)" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Install docker-compose
+        uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2'
+
+      - name: Give execute permissions to build-image.sh
+        run: chmod +x ./scripts/build-image.sh
+
+      - name: Build Docker image
+        run: ./scripts/build-image.sh
+
+      - name: List Docker images ${CONTAINER_REGISTRY}/book_catalog:${{ env.VERSION }}
+      run: docker images
+   
+
+      # Add Trivy container image scanning with enhanced logging
+      - name: Install Trivy
+        run: |
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+
+      - name: Run Trivy scan with verbosity
+        run: trivy image --severity HIGH,CRITICAL ${CONTAINER_REGISTRY}/book_catalog:${{ env.VERSION }} --debug > trivy_report.txt || echo "Trivy scan found vulnerabilities"
+
+      - name: Check Trivy report size
+        run: ls -lh trivy_report.txt
+
+      - name: Upload Trivy report
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-report
+          path: trivy_report.txt
+
+      # Fail the build if Trivy finds critical vulnerabilities
+      - name: Check for critical vulnerabilities in Trivy scan
+        run: |
+          if grep -q 'CRITICAL' trivy_report.txt; then
+            cat trivy_report.txt
+            echo "Critical vulnerabilities found by Trivy, failing the build."
+            exit 1
+          fi
+
+      - name: Set execute permission for push-image.sh
+        run: chmod +x ./scripts/push-image.sh
+
+      - name: Publish Docker image
+        env:
+          CONTAINER_REGISTRY: ${{steps.tf.outputs.ACR_NAME}}
+          REGISTRY_UN: ${{steps.tf.outputs.ACR_UN}}
+          REGISTRY_PW: ${{steps.tf.outputs.ACR_PW}}
+        run: ./scripts/push-image.sh
+
+      - uses: tale/kubectl-action@v1
+        with:
+          base64-kube-config: ${{ secrets.KUBE_CONFIG }}
+          kubectl-version: v1.24.2
+
+      - name: Decode kubeconfig
+        run: echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
+
+      - name: Fix kubeconfig permission
+        run: chmod 600 ~/.kube/config
+
+      - name: Set execute permission for deploy.sh
+        run: chmod +x ./scripts/deploy.sh
+
+      - name: Deploy to Kubernetes
+        env:
+          AZURE_RG: ${{steps.tf.outputs.AZURE_RG}}
+          AZURE_AKS: ${{steps.tf.outputs.AZURE_AKS}}
+        run: ./scripts/deploy.sh
+
