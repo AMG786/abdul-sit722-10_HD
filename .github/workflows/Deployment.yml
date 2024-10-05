@@ -113,9 +113,6 @@ jobs:
       - name: Build Docker image
         run: ./scripts/build-image.sh
 
-      - name: Image Name
-        run: echo "${CONTAINER_REGISTRY}/book_catalog:${{ env.VERSION }}"
-
       # Add Trivy container image scanning with enhanced logging
       - name: Install Trivy
         run: |
@@ -125,8 +122,30 @@ jobs:
           sudo apt-get update
           sudo apt-get install trivy
 
+      # Add Trivy container image scanning with enhanced logging
       - name: Run Trivy scan with verbosity
-        run: trivy image --severity HIGH,CRITICAL ${CONTAINER_REGISTRY}/book_catalog:${{ env.VERSION }} --debug > trivy_report.txt || echo "Trivy scan found vulnerabilities"
+        run: |
+          trivy image --severity HIGH,CRITICAL,LOW ${CONTAINER_REGISTRY}/book_catalog:${{ env.VERSION }} --debug > trivy_report.txt || echo "Trivy scan encountered an error"
+
+      - name: Check Trivy report size and contents
+        run: |
+          if [[ ! -s trivy_report.txt ]]; then
+            echo "Trivy report is empty, no vulnerabilities found."
+          else
+            echo "Trivy report generated with content:"
+            cat trivy_report.txt
+            if grep -q 'CRITICAL' trivy_report.txt; then
+              echo "Critical vulnerabilities found by Trivy, failing the build."
+              exit 1
+            elif grep -q 'HIGH' trivy_report.txt; then
+              echo "High vulnerabilities found by Trivy, but no critical issues. Proceeding."
+            elif grep -q 'LOW' trivy_report.txt; then
+              echo "Low vulnerabilities found by Trivy, but no critical or high issues. Proceeding."
+            else
+              echo "No vulnerabilities found."
+            fi
+          fi
+
 
       - name: Check Trivy report size
         run: ls -lh trivy_report.txt

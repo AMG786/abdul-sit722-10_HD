@@ -15,5 +15,5 @@ docker tag book-catalog:latest $CONTAINER_REGISTRY/book-catalog:$VERSION
 docker tag inventory-management:latest $CONTAINER_REGISTRY/inventory-management:$VERSION
 
 docker push $CONTAINER_REGISTRY/book-catalog:$VERSION
-echo $CONTAINER_REGISTRY/book-catalog:$VERSION
+
 docker push $CONTAINER_REGISTRY/inventory-management:$VERSION
