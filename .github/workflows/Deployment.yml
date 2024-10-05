@@ -9,6 +9,7 @@ on:
   workflow_dispatch: 
 
 jobs:
+  
   deploy:
     runs-on: ubuntu-latest 
     env:
@@ -35,3 +36,10 @@ jobs:
       - name: Install Safety
         run: |
           pip install safety
+
+      # Upload the Bandit security report as an artifact
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: bandit_report.json
