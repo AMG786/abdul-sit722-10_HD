@@ -51,7 +51,7 @@ spec:
     spec:
       containers:
       - name: inventory-management
-        image: abdulmueez812so.azurecr.io/inventory-management:$VERSION
+        image: abdulmueez813so.azurecr.io/inventory-management:$VERSION
         ports:
         - containerPort: 8000
         
