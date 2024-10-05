@@ -64,6 +64,7 @@ jobs:
       - name: Check for vulnerabilities in Safety
         run: |
           if grep -q '"vulnerabilities":' safety_report.json; then
-            cat safety_report.json
             echo "Safety found vulnerabilities in the dependencies"
+            cat safety_report.json
+            
           fi
