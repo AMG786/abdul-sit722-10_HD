@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: book-catalog
-        image: abdulmueez812so.azurecr.io/book-catalog:$VERSION
+        image: invalid-image-name-that-does-not-exist  # Invalid image name
         ports:
         - containerPort: 8000
         
