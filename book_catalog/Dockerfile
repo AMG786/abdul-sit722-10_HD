@@ -8,6 +8,9 @@ COPY . .
 # Install dependencies
 RUN pip install --no-cache-dir -r app/requirements.txt
 
+# Introduce a vulnerable package
+RUN pip install flask==1.0.0  # This version has known vulnerabilities
+
 # Set the PYTHONPATH to the book_catalog directory
 ENV PYTHONPATH=/app/book_catalog
 
