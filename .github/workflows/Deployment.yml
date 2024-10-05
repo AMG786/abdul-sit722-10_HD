@@ -115,7 +115,9 @@ jobs:
 
       - name: Install Trivy
         run: |
-               sudo apt install trivy
+          sudo apt-get install wget
+          wget https://github.com/aquasecurity/trivy/releases/download/v0.44.0/trivy_0.44.0_Linux-64bit.deb
+          sudo dpkg -i trivy_0.44.0_Linux-64bit.deb
 
       - name: Scan Docker image for vulnerabilities
         run: trivy image book-catalog:latest           
