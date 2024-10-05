@@ -179,7 +179,7 @@ jobs:
             echo "Critical vulnerabilities found by Trivy, failing the build."
             exit 1
           fi
-          
+
       - name: Decode kubeconfig
         run: echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
 
@@ -194,5 +194,15 @@ jobs:
           AZURE_RG: ${{steps.tf.outputs.AZURE_RG}}
           AZURE_AKS: ${{steps.tf.outputs.AZURE_AKS}}
         run: ./scripts/deploy.sh
+
+        # Optional: Notify about deployment success or failure
+      - name: Notify Deployment Status
+        run: |
+          if [[ $? -eq 0 ]]; then
+            echo "Deployment was successful."
+          else
+            echo "Deployment failed and was rolled back."
+            exit 1
+          fi
 
 
