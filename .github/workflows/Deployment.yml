@@ -44,7 +44,6 @@ jobs:
           pip install safety
           safety check -r book_catalog/app/requirements.txt --ignore <vulnerability_id> --output json > safety_report.json || echo "Safety found issues"
 
-
       # Upload Safety report as an artifact
       - name: Upload Safety report
         uses: actions/upload-artifact@v3
@@ -52,22 +51,23 @@ jobs:
           name: safety-report
           path: safety_report.json
 
-      # Fail the job if vulnerabilities are found in Bandit or Safety
-      # Fail the job if vulnerabilities are found in Bandit or Safety
+      # Fail the job if vulnerabilities are found in Bandit
       - name: Check for vulnerabilities in Bandit
         run: |
           if grep -q '"issue_severity":' bandit_report.json; then
+            cat bandit_report.json
             echo "Bandit found vulnerabilities, failing the build."
             exit 1
           fi
 
+      # Fail the job if vulnerabilities are found in Safety
       - name: Check for vulnerabilities in Safety
         run: |
           if grep -q '"vulnerabilities":' safety_report.json; then
-           echo "Safety found vulnerabilities, failing the build."
-           exit 1
+            cat safety_report.json
+            echo "Safety found vulnerabilities, failing the build."
+            exit 1
           fi
-
 
       - name: Login to Azure
         uses: azure/login@v1
@@ -110,10 +110,10 @@ jobs:
       - name: Give execute permissions to build-image.sh
         run: chmod +x ./scripts/build-image.sh
 
-      - name: Build
+      - name: Build Docker image
         run: ./scripts/build-image.sh
 
-      # Add Trivy container image scanning
+      # Add Trivy container image scanning with enhanced logging
       - name: Install Trivy
         run: |
           sudo apt-get install -y wget apt-transport-https gnupg lsb-release
@@ -122,8 +122,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install trivy
 
-      - name: Scan Docker image with Trivy
-        run: trivy image --severity HIGH,CRITICAL ${CONTAINER_REGISTRY}/book_catalog:${{ env.VERSION }} > trivy_report.txt || echo "Trivy scan found vulnerabilities"
+      - name: Run Trivy scan with verbosity
+        run: trivy image --severity HIGH,CRITICAL ${CONTAINER_REGISTRY}/book_catalog:${{ env.VERSION }} --debug > trivy_report.txt || echo "Trivy scan found vulnerabilities"
+
+      - name: Check Trivy report size
+        run: ls -lh trivy_report.txt
 
       - name: Upload Trivy report
         uses: actions/upload-artifact@v3
@@ -135,6 +138,7 @@ jobs:
       - name: Check for critical vulnerabilities in Trivy scan
         run: |
           if grep -q 'CRITICAL' trivy_report.txt; then
+            cat trivy_report.txt
             echo "Critical vulnerabilities found by Trivy, failing the build."
             exit 1
           fi
@@ -142,7 +146,7 @@ jobs:
       - name: Set execute permission for push-image.sh
         run: chmod +x ./scripts/push-image.sh
 
-      - name: Publish
+      - name: Publish Docker image
         env:
           CONTAINER_REGISTRY: ${{steps.tf.outputs.ACR_NAME}}
           REGISTRY_UN: ${{steps.tf.outputs.ACR_UN}}
@@ -160,10 +164,10 @@ jobs:
       - name: Fix kubeconfig permission
         run: chmod 600 ~/.kube/config
 
-      - name: Set execute permission for the deploy.sh
+      - name: Set execute permission for deploy.sh
         run: chmod +x ./scripts/deploy.sh
 
-      - name: Deploy
+      - name: Deploy to Kubernetes
         env:
           AZURE_RG: ${{steps.tf.outputs.AZURE_RG}}
           AZURE_AKS: ${{steps.tf.outputs.AZURE_AKS}}
