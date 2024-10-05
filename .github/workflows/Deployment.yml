@@ -28,18 +28,40 @@ jobs:
         run: |
           pip install -r book_catalog/app/requirements.txt
 
+      # Run Bandit security check and generate report
       - name: Run Bandit security check
         run: |
           pip install bandit
-          bandit -r book_catalog/app -o bandit_report.json -f json || exit 1
+          bandit -r book_catalog/app -o bandit_report.json -f json || echo "Bandit found issues"
 
-      - name: Install Safety
-        run: |
-          pip install safety
-
-      # Upload the Bandit security report as an artifact
+      # Upload Bandit report as an artifact
       - name: Upload Bandit report
         uses: actions/upload-artifact@v3
         with:
           name: bandit-report
           path: bandit_report.json
+
+      # Install Safety and run the security check on dependencies
+      - name: Run Safety vulnerability check
+        run: |
+          pip install safety
+          safety check -r book_catalog/app/requirements.txt --output json > safety_report.json || echo "Safety found issues"
+
+      # Upload Safety report as an artifact
+      - name: Upload Safety report
+        uses: actions/upload-artifact@v3
+        with:
+          name: safety-report
+          path: safety_report.json
+
+      # Fail the job if vulnerabilities are found in Bandit or Safety
+      - name: Check for vulnerabilities
+        run: |
+          if grep -q '"issue_severity":' bandit_report.json; then
+            echo "Bandit found vulnerabilities, failing the build."
+            exit 1
+          fi
+          if grep -q '"vulnerabilities":' safety_report.json; then
+            echo "Safety found vulnerabilities, failing the build."
+            exit 1
+          fi
