@@ -120,7 +120,7 @@ jobs:
           sudo dpkg -i trivy_0.44.0_Linux-64bit.deb
 
       - name: Scan Docker image for vulnerabilities
-        run: trivy image book-catalog:latest           
+        run: trivy image book-catalog --severity HIGH,CRITICAL --ignore-unfixed --format table           
 
       - name: Set execute permission for push-image.sh
         run: chmod +x ./scripts/push-image.sh

@@ -6,6 +6,8 @@ from . import crud, models, schemas
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+raise Exception("Simulated crash for testing rollback")
+
 
 # Dependency to get the database session
 def get_db():
