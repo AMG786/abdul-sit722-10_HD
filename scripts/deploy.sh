@@ -14,16 +14,23 @@ az aks get-credentials --resource-group $AZURE_RG --name $AZURE_AKS --overwrite-
 envsubst < ./scripts/kubernetes/deployment.yaml | kubectl apply -f - 
 
 echo "Deployment failed. Rolling back. start "
+echo "kubectl get deployments"
+kubectl get deployments
+echo "kubectl describe deployment book-catalog-deployment"
+kubectl describe deployment book-catalog-deployment
+echo "kubectl get pods"
+kubectl get pods
+echo "kubectl describe nodes"
+kubectl describe nodes
+
 # Wait for the deployment to finish
-# Wait for the deployment to finish with a timeout
-TIMEOUT=300  # Set a timeout in seconds
-if ! kubectl rollout status deployment/book-catalog-deployment --timeout=${TIMEOUT}s; then
+kubectl rollout status deployment/book-catalog-deployment || {
     echo "Deployment failed. Rolling back."
     kubectl rollout undo deployment/book-catalog-deployment
     exit 1
-fi
-
+}
 echo "Deployment failed. Rolling back. end "
+
 kubectl get pods
 kubectl get deployments
 kubectl get services
