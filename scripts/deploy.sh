@@ -15,11 +15,14 @@ envsubst < ./scripts/kubernetes/deployment.yaml | kubectl apply -f -
 
 echo "Deployment failed. Rolling back. start "
 # Wait for the deployment to finish
-kubectl rollout status deployment/book-catalog-deployment || {
+# Wait for the deployment to finish with a timeout
+TIMEOUT=300  # Set a timeout in seconds
+if ! kubectl rollout status deployment/book-catalog-deployment --timeout=${TIMEOUT}s; then
     echo "Deployment failed. Rolling back."
     kubectl rollout undo deployment/book-catalog-deployment
     exit 1
-}
+fi
+
 echo "Deployment failed. Rolling back. end "
 kubectl get pods
 kubectl get deployments
