@@ -1,7 +1,7 @@
 # Sets global variables for this Terraform project.
 
 variable "app_name" {
-  default = "abdulmueez819so"
+  default = "abdulmueez820so"
 }
 
 variable "location" {
