@@ -61,7 +61,7 @@ jobs:
           
           fi
 
-      # Fail the job if vulnerabilities are found in Safety
+      # Fail  the job if vulnerabilities are found in Safety
       - name: Check for vulnerabilities in Safety
         run: |
           if grep -q '"vulnerabilities":' safety_report.json; then
