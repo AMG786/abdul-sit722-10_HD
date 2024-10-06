@@ -24,11 +24,12 @@ echo "kubectl describe nodes"
 kubectl describe nodes
 
 # Wait for the deployment to finish
-kubectl rollout status deployment/book-catalog-deployment || {
-    echo "Deployment failed. Rolling back."
-    kubectl rollout undo deployment/book-catalog-deployment
-    exit 1
-}
+#kubectl rollout status deployment/book-catalog-deployment || {
+#    echo "Deployment failed. Rolling back."
+#    kubectl rollout undo deployment/book-catalog-deployment
+#    exit 1
+#}
+kubectl rollout undo deployment/book-catalog-deployment
 echo "Deployment failed. Rolling back. end "
 
 kubectl get pods
