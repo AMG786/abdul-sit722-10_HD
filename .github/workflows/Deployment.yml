@@ -114,7 +114,7 @@ jobs:
       - name: Build Docker image
         run: ./scripts/build-image.sh
 
-      # Trivy for  image and container 
+      # Trivy for   image and container 
       - name: Install Trivy
         run: |
           sudo apt-get install wget
