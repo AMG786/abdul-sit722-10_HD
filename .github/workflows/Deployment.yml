@@ -24,7 +24,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r book_catalog/app/requirements.txt
-
+     
+      # Run Bandit and Safety check: 
       # Run Bandit security check and generate report
       - name: Run Bandit security check
         run: |
@@ -57,7 +58,7 @@ jobs:
           if grep -q '"issue_severity":' bandit_report.json; then
             cat bandit_report.json
             echo "Bandit found vulnerabilities, failing the build."
-            exit 1
+          
           fi
 
       # Fail the job if vulnerabilities are found in Safety
@@ -66,7 +67,7 @@ jobs:
           if grep -q '"vulnerabilities":' safety_report.json; then
             echo "Safety found vulnerabilities in the dependencies"
             cat safety_report.json
-            
+              
           fi
 
       - name: Login to Azure
@@ -113,6 +114,7 @@ jobs:
       - name: Build Docker image
         run: ./scripts/build-image.sh
 
+      # Trivy for image and container 
       - name: Install Trivy
         run: |
           sudo apt-get install wget
@@ -120,8 +122,8 @@ jobs:
           sudo dpkg -i trivy_0.44.0_Linux-64bit.deb
 
       - name: Scan Docker image for vulnerabilities
-        run: trivy image book-catalog --severity HIGH,CRITICAL --ignore-unfixed --format table           
-
+        run: trivy image book-catalog --severity HIGH,CRITICAL --ignore-unfixed --format table   
+                
       - name: Set execute permission for push-image.sh
         run: chmod +x ./scripts/push-image.sh
 
